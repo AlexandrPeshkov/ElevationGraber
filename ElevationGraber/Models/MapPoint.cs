@@ -6,6 +6,6 @@
         public double Y { get; set; }
         public double Z { get; set; }
 
-        public MapPoint(double x, double y, double z) => (X, Y, Z) = (x, y, z);
+        public MapPoint(double x = 0, double y = 0, double z = 0) => (X, Y, Z) = (x, y, z);
     }
 }

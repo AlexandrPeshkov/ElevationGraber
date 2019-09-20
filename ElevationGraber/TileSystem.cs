@@ -9,6 +9,8 @@ static class TileSystem
     private const double MinLongitude = -180;
     private const double MaxLongitude = 180;
 
+    public const int tileSize = 256;
+
     /// <summary>  
     /// Clips a number to the specified minimum and maximum values.  
     /// </summary>  
@@ -30,7 +32,7 @@ static class TileSystem
     /// <returns>The map width and height in pixels.</returns>  
     public static uint MapSize(int levelOfDetail)
     {
-        return (uint)256 << levelOfDetail;
+        return (uint)tileSize << levelOfDetail;
     }
 
     /// <summary>  
@@ -117,8 +119,8 @@ static class TileSystem
     /// <param name="tileY">Output parameter receiving the tile Y coordinate.</param>  
     public static void PixelXYToTileXY(int pixelX, int pixelY, out int tileX, out int tileY)
     {
-        tileX = pixelX / 256;
-        tileY = pixelY / 256;
+        tileX = pixelX / tileSize;
+        tileY = pixelY / tileSize;
     }
 
     /// <summary>  
@@ -131,8 +133,8 @@ static class TileSystem
     /// <param name="pixelY">Output parameter receiving the pixel Y coordinate.</param>  
     public static void TileXYToPixelXY(int tileX, int tileY, out int pixelX, out int pixelY)
     {
-        pixelX = tileX * 256;
-        pixelY = tileY * 256;
+        pixelX = tileX * tileSize;
+        pixelY = tileY * tileSize;
     }
 
     /// <summary>  
@@ -208,5 +210,18 @@ static class TileSystem
         int minPixelY;
         LatLongToPixelXY(latitude, longitude, levelOfDetail, out minPixelX, out minPixelY);
         PixelXYToTileXY(minPixelX, minPixelY, out tileX, out tileY);
+    }
+
+    /// <summary>
+    /// Переводит глобальные индексы карты во внутренние индексы пикселей тайла. Ограниченные размером тайла.
+    /// </summary>
+    /// <param name="pixelX">Pixel X coordinate.</param>  
+    /// <param name="pixelY">Pixel Y coordinate.</param>  
+    /// <param name="tileInnerX">Позиция X внутри тайла</param>
+    /// <param name="innerTileY">Позиция Y внутри тайла</param>
+    public static void MapPixelXYToTileInnerPixelXY(int pixelX, int pixelY, out int tileInnerX, out int tileInnerY)
+    {
+        tileInnerX = pixelX % tileSize;
+        tileInnerY = pixelY % tileSize;
     }
 }

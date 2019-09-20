@@ -8,28 +8,40 @@ namespace ElevationGraber
     {
         public ColorHeatMap()
         {
-            initColorsBlocks();
+            InitColorsBlocks();
         }
         public ColorHeatMap(byte alpha)
         {
             this.Alpha = alpha;
-            initColorsBlocks();
+            InitColorsBlocks();
         }
-        private void initColorsBlocks()
+        private void InitColorsBlocks()
         {
-            ColorsOfMap.AddRange(new Color[]{
-            Color.FromArgb(Alpha, 0, 0, 0) ,//Black
-            Color.FromArgb(Alpha, 0, 0, 0xFF) ,//Blue
-            Color.FromArgb(Alpha, 0, 0xFF, 0xFF) ,//Cyan
-            Color.FromArgb(Alpha, 0, 0xFF, 0) ,//Green
-            Color.FromArgb(Alpha, 0xFF, 0xFF, 0) ,//Yellow
-            Color.FromArgb(Alpha, 0xFF, 0, 0) ,//Red
-            Color.FromArgb(Alpha, 0xFF, 0xFF, 0xFF) // White
-        });
+            //    ColorsOfMap.AddRange(new Color[]{
+            //    Color.FromArgb(Alpha, 0, 0, 0) ,//Black
+            //    Color.FromArgb(Alpha, 0, 0, 0xFF) ,//Blue
+            //    Color.FromArgb(Alpha, 0, 0xFF, 0xFF) ,//Cyan
+            //    Color.FromArgb(Alpha, 0, 0xFF, 0) ,//Green
+            //    Color.FromArgb(Alpha, 0xFF, 0xFF, 0) ,//Yellow
+            //    Color.FromArgb(Alpha, 0xFF, 0, 0) ,//Red
+            //    Color.FromArgb(Alpha, 0xFF, 0xFF, 0xFF) // White
+            //});
+
+            for (var i = 0; i < 255; i += 25)
+            {
+                Color color = Color.FromArgb(Alpha, i, i, i);
+                ColorsOfMap.Add(color);
+            }
+
+            //for (var i = 255; i >= 0; i -= 25)
+            //{
+            //    Color color = Color.FromArgb(Alpha, i, i, i);
+            //    ColorsOfMap.Add(color);
+            //}
         }
         public Color GetColorForValue(double val, double maxVal)
         {
-            double valPerc = val / maxVal;// value%
+            double valPerc = maxVal == 0 ? 0 : val / maxVal;// value%
             double colorPerc = 1d / (ColorsOfMap.Count - 1);// % of each block of color. the last is the "100% Color"
             double blockOfColor = valPerc / colorPerc;// the integer part repersents how many block to skip
             int blockIdx = (int)Math.Truncate(blockOfColor);// Idx of 

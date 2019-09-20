@@ -9,70 +9,58 @@ namespace ElevationGraber
 {
     public class MapVisualizer
     {
-        private int maxElevation = 50;
-        private const double earthRadius = 6378137.0;
-
-    
-
+        private string pngExt = ".png";
         private ColorHeatMap ColorHeatMap { get; set; }
 
         public MapVisualizer()
         {
             ColorHeatMap = new ColorHeatMap();
         }
-
-        private double DegreeToRadian(double angle) => Math.PI * angle / 180.0;
-
-        private double Secant(double X) => 1 / Math.Cos(X);
-
-        private MapPoint MercatorProjection(AltitudeResponse response)
+        public void MakeHeatImagePng(List<MapPoint> data, int width = TileSystem.tileSize, int height = TileSystem.tileSize, string fileName = "HeatImage")
         {
-            var K = Secant(response.Location.Lat);
+            int maxElevation = (int)Math.Ceiling(data.Max(p => p.Z));
 
-            var X = (int)(DegreeToRadian(response.Location.Lng) * earthRadius * K ) - 22000000;
-            var Y = (int)((Math.Log(Math.Tan(Math.PI / 4 + DegreeToRadian(response.Location.Lat) / 2)) * earthRadius) * K) - 8000000;
+            var trimMatrix = data.GroupBy(p => p.Y).Select(g => g.OrderBy(p => p.X).ToList()).ToList();
 
-            return new MapPoint(X, Y, response.Elevation);
-        }
-
-        public void MakeImage(List<List<AltitudeResponse>> elevationMatrix)
-        {
-            maxElevation = (int)Math.Ceiling(elevationMatrix.Max(l => l.Max(p => p.Elevation)));
-
-            List<List<MapPoint>> data = elevationMatrix
-                .Select(l => l
-                .Select(p => new MapPoint(p.Location.Lat, p.Location.Lng, p.Elevation))
-                .Distinct().ToList())
-                .ToList();
-
-            Bitmap bitmap = new Bitmap(data.FirstOrDefault().Count, data.Count);
-
-            foreach(var list in data.ToList())
+            if (trimMatrix.Any() && trimMatrix.FirstOrDefault() != null)
             {
-                list.Reverse();
-            }
+                var w = trimMatrix.Max(l => l.Count);
+                var h = trimMatrix.Count;
+                Bitmap smallBitmap = new Bitmap(w, h);
 
-            data.Reverse();
-
-            for (var i = 0; i < data.Count; i++)
-            {
-                for (var j = 0; j < data[i].Count; j++)
+                for (var i = 0; i < trimMatrix.Count; i++)
                 {
-                    double height = data[i][j].Z;
-                    int x = j;
-                    int y = i;
-
-                    Color color = CalcElevetionColor(height);
-                    bitmap.SetPixel(x, y, color);
+                    for (var j = 0; j < trimMatrix[i].Count; j++)
+                    {
+                        Color color = ColorHeatMap.GetColorForValue(trimMatrix[i][j].Z, maxElevation);
+                        smallBitmap.SetPixel(j, i, color);
+                    }
                 }
+
+                Bitmap result = new Bitmap(width, height);
+                using (Graphics g = Graphics.FromImage(result))
+                {
+                    SolidBrush black = new SolidBrush(Color.Black);
+                    g.FillRectangle(black, new Rectangle(0, 0, width, height));
+
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
+                    g.DrawImage(smallBitmap, 0, 0, width, height);
+                }
+
+                //for (var i = 0; i < width; i++)
+                //{
+                //    Color color = result.GetPixel(i, height - 1);
+                //    result.SetPixel(i, height - 1, color);
+                //}
+
+                //for (var i = 0; i < height; i++)
+                //{
+                //    Color color = result.GetPixel(width - 1, i);
+                //    result.SetPixel(width - 1, i, color);
+                //}
+
+                result.Save($"{fileName}{pngExt}", ImageFormat.Png);
             }
-
-            bitmap.Save("ElevationMap.png", ImageFormat.Png);
-        }
-
-        private Color CalcElevetionColor(double value)
-        {
-            return ColorHeatMap.GetColorForValue(value, maxElevation);
         }
     }
 }

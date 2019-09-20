@@ -85,7 +85,6 @@ namespace ElevationGraber
             List<List<AltitudeResponse>> data = new List<List<AltitudeResponse>>();
 
             int stepsCount = (int)Math.Ceiling(Math.Abs(TopLeft.Lng - BottomRight.Lng) / GeoPointStep);
-            List<Task> tasks = new List<Task>();
 
             for (var i = 0; i < stepsCount; i++)
             {
@@ -105,7 +104,16 @@ namespace ElevationGraber
             List<List<AltitudeResponse>> data = JsonConvert.DeserializeObject<List<List<AltitudeResponse>>>(json, jsonConverterSettings);
             MapVisualizer mapVisualizer = new MapVisualizer();
 
-            mapVisualizer.MakeImage(data.Where(l => l != null).ToList());
+            List<List<MapPoint>> mapMatrix = data
+               .Select(l => l
+               .Select(p => new MapPoint(p.Location.Lat, p.Location.Lng, p.Elevation))
+               .Distinct().ToList())
+               .ToList();
+
+            List<MapPoint> points = mapMatrix.SelectMany(l => l.ToList()).ToList();
+
+            data.Where(l => l != null).ToList();
+            mapVisualizer.MakeHeatImagePng(points);
         }
 
         private async Task WriteAltitudeData(List<List<AltitudeResponse>> data, string path = "AltitudeData.json")
